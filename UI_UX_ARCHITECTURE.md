@@ -3,6 +3,14 @@
 
 ---
 
+## Version 1 Note
+This document represents NESLA UI/UX Architecture V1. The work completed so far is version 1 of the NESLA admin/UI design and OS integration.
+
+## Important Clarification
+NESLA is an operating system architecture. The modules `Brain`, `Heart`, `Mouth`, and `Eyes` are core NESLA OS components for processing, emotion/intent analysis, communication, and vision. They are not direct UI screens by themselves; the UI is the interface layer that interacts with these NESLA OS modules.
+
+---
+
 ## 1. NAVIGATION STRUCTURE
 
 ### 1.1 Primary Navigation Model
