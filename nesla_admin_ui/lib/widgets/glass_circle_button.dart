@@ -81,14 +81,14 @@ class _GlassCircleButtonState extends State<GlassCircleButton>
                     child: Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.04),
+                        color: Colors.white.withValues(alpha: 0.04),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.08),
+                          color: Colors.white.withValues(alpha: 0.08),
                           width: 1.0,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.35),
+                            color: Colors.black.withValues(alpha: 0.35),
                             blurRadius: 18,
                             offset: const Offset(0, 6),
                           ),
@@ -109,8 +109,8 @@ class _GlassCircleButtonState extends State<GlassCircleButton>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withOpacity(0.02),
-                          Colors.white.withOpacity(0.00),
+                          Colors.white.withValues(alpha: 0.02),
+                          Colors.white.withValues(alpha: 0.00),
                         ],
                       ),
                     ),
@@ -120,7 +120,7 @@ class _GlassCircleButtonState extends State<GlassCircleButton>
                 // Content
                 DefaultTextStyle(
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.95),
+                    color: Colors.white.withValues(alpha: 0.95),
                     fontSize: widget.size * 0.36,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.6,
