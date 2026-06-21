@@ -259,6 +259,28 @@ class LoadBalancerService:
             for region in regions
         ]
 
+    def huggingface_presets(self, space_id: str = "your-username/your-space") -> list[ServerPreset]:
+        return [
+            ServerPreset(
+                name="huggingface-inference",
+                provider="huggingface",
+                host=f"{space_id}.hf.space",
+                port=443,
+                protocol="https",
+                capabilities=["llm_pipeline", "inference", "model_calls"],
+                notes="Hugging Face Space preset. Replace space_id with your real Space or endpoint.",
+            ),
+            ServerPreset(
+                name="huggingface-api",
+                provider="huggingface",
+                host="api-inference.huggingface.co",
+                port=443,
+                protocol="https",
+                capabilities=["llm_pipeline", "inference", "model_calls", "api"],
+                notes="Hugging Face inference API preset.",
+            ),
+        ]
+
     def list_placements(self) -> list[ModulePlacementRead]:
         placements = self.db.query(ModulePlacement).order_by(ModulePlacement.created_at.desc()).all()
         servers_by_id = {server.id: server for server in self.list_servers()}

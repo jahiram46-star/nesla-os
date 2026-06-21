@@ -73,6 +73,14 @@ def firebase_presets(
     return service.firebase_presets(project_id)
 
 
+@router.get("/presets/huggingface", response_model=list[ServerPreset])
+def huggingface_presets(
+    space_id: str = Query(default="your-username/your-space", min_length=2),
+    service: LoadBalancerService = Depends(get_service),
+) -> list[ServerPreset]:
+    return service.huggingface_presets(space_id)
+
+
 @router.get("/placements", response_model=list[ModulePlacementRead])
 def list_placements(service: LoadBalancerService = Depends(get_service)) -> list[ModulePlacementRead]:
     return service.list_placements()

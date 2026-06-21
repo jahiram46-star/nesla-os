@@ -26,6 +26,7 @@ class _LoadBalancerScreenState extends State<LoadBalancerScreen> {
   final routeController = TextEditingController(text: '/brain');
   final priorityController = TextEditingController(text: '1');
   final firebaseProjectController = TextEditingController(text: 'your-project-id');
+  final huggingFaceSpaceController = TextEditingController(text: 'your-username/your-space');
   final routingModuleController = TextEditingController(text: 'brain');
   RoutingPlan? routingPlan;
   final firebaseBridge = FirebaseSdkBridge();
@@ -56,6 +57,7 @@ class _LoadBalancerScreenState extends State<LoadBalancerScreen> {
     routeController.dispose();
     priorityController.dispose();
     firebaseProjectController.dispose();
+    huggingFaceSpaceController.dispose();
     routingModuleController.dispose();
     super.dispose();
   }
@@ -117,6 +119,12 @@ class _LoadBalancerScreenState extends State<LoadBalancerScreen> {
 
   Future<void> addFirebasePresets() async {
     final presets = await api.fetchFirebasePresets(projectId: firebaseProjectController.text.trim());
+    await api.createServersFromPresets(presets);
+    await refresh();
+  }
+
+  Future<void> addHuggingFacePresets() async {
+    final presets = await api.fetchHuggingFacePresets(spaceId: huggingFaceSpaceController.text.trim());
     await api.createServersFromPresets(presets);
     await refresh();
   }
@@ -192,7 +200,7 @@ class _LoadBalancerScreenState extends State<LoadBalancerScreen> {
               children: [
                 SizedBox(
                   width: twoColumns ? (constraints.maxWidth - 16) / 2 : constraints.maxWidth,
-                  child: _panel('Firebase / Free Server Presets', _firebasePresetPanel()),
+                  child: _panel('Firebase / Hugging Face Presets', _firebasePresetPanel()),
                 ),
                 SizedBox(
                   width: twoColumns ? (constraints.maxWidth - 16) / 2 : constraints.maxWidth,
@@ -325,7 +333,21 @@ class _LoadBalancerScreenState extends State<LoadBalancerScreen> {
               leading: const Icon(Icons.dns, color: NeslaColors.cyan),
               title: Text(server.name, style: const TextStyle(color: NeslaColors.white)),
               subtitle: Text('${server.baseUrl} | ${server.capabilities.join(', ')}'),
-              trailing: Text(server.status, style: const TextStyle(color: NeslaColors.onlineGreen)),
+              trailing: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(server.status, style: const TextStyle(color: NeslaColors.onlineGreen)),
+                  Text(
+                    server.name.contains('firebase')
+                        ? 'Firebase'
+                        : server.name.contains('huggingface')
+                            ? 'Hugging Face'
+                            : 'Custom',
+                    style: const TextStyle(color: NeslaColors.mediumGray, fontSize: 11),
+                  ),
+                ],
+              ),
             ),
           )
           .toList(),
@@ -405,18 +427,35 @@ class _LoadBalancerScreenState extends State<LoadBalancerScreen> {
           style: const TextStyle(color: NeslaColors.darkGray),
         ),
         const SizedBox(height: 8),
+        _field(firebaseProjectController, 'Firebase project id'),
+        const SizedBox(height: 4),
         Text(
-          'Preset regions: ${FirebaseServerCatalog.regions.length}',
+          'Firebase regions: ${FirebaseServerCatalog.regions.length}',
           style: const TextStyle(color: NeslaColors.darkGray),
         ),
         const SizedBox(height: 12),
-        _field(firebaseProjectController, 'Firebase project id'),
+        _field(huggingFaceSpaceController, 'Hugging Face space id'),
+        const SizedBox(height: 4),
+        const Text(
+          'Hugging Face presets are ready for a Space or inference endpoint.',
+          style: TextStyle(color: NeslaColors.darkGray),
+        ),
+        const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: () => addFirebasePresets().catchError((_) => refresh()),
             icon: const Icon(Icons.cloud),
             label: const Text('Add 10 Firebase Server Presets'),
+          ),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () => addHuggingFacePresets().catchError((_) => refresh()),
+            icon: const Icon(Icons.psychology),
+            label: const Text('Add Hugging Face Presets'),
           ),
         ),
       ],

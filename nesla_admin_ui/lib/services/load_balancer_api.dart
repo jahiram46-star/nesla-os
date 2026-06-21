@@ -426,6 +426,13 @@ class LoadBalancerApi {
     return data.map((item) => ServerPreset.fromJson(item as Map<String, dynamic>)).toList();
   }
 
+  Future<List<ServerPreset>> fetchHuggingFacePresets({String spaceId = 'your-username/your-space'}) async {
+    final response = await http.get(Uri.parse('$baseUrl/load-balancer/presets/huggingface?space_id=$spaceId'));
+    _ensureOk(response);
+    final data = jsonDecode(response.body) as List<dynamic>;
+    return data.map((item) => ServerPreset.fromJson(item as Map<String, dynamic>)).toList();
+  }
+
   Future<List<ModuleServerPolicy>> fetchModulePolicies() async {
     final response = await http.get(Uri.parse('$baseUrl/load-balancer/policies'));
     _ensureOk(response);
