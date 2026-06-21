@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
+  static const String _overrideBaseUrl = String.fromEnvironment('NESLA_API_BASE_URL', defaultValue: '');
+
   static String get defaultBaseUrl {
+    if (_overrideBaseUrl.isNotEmpty) return _overrideBaseUrl;
     if (kIsWeb) return 'http://127.0.0.1:8000';
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:

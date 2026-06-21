@@ -6,6 +6,7 @@ import '../widgets/sidebar.dart';
 import '../widgets/dashboard_card.dart';
 import '../widgets/browser_access_panel.dart';
 import '../services/admin_api.dart';
+import '../services/api_config.dart';
 import '../services/responsive_service.dart';
 import 'load_balancer_screen.dart';
 
@@ -569,6 +570,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
         const Text(
           'OpenRouter model list ekhane update korle backend next request e latest list auto-read korbe.',
           style: TextStyle(color: NeslaColors.darkGray),
+        ),
+        const SizedBox(height: 10),
+        _panel(
+          'Mobile Backend URL',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                ApiConfig.defaultBaseUrl,
+                style: const TextStyle(color: NeslaColors.white, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Android emulator: 10.0.2.2 | iOS simulator: 127.0.0.1 | physical device: --dart-define=NESLA_API_BASE_URL=http://YOUR_IP:8000',
+                style: TextStyle(color: NeslaColors.darkGray),
+              ),
+            ],
+          ),
         ),
         if (envStatus != null) ...[
           const SizedBox(height: 8),
