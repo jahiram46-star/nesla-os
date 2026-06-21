@@ -381,60 +381,179 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildDashboardContent(BuildContext context) {
-    final gridColumns = ResponsiveService.getGridColumns(context);
-    final padding = ResponsiveService.getResponsivePadding(context);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildGeminiStyleHero(),
-        const SizedBox(height: 24),
-        // System Status Section
-        Text(
-          'Module Status',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: 16),
-
-        // Grid of Module Cards
-        GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: gridColumns,
-            crossAxisSpacing: padding,
-            mainAxisSpacing: padding,
-            childAspectRatio: gridColumns == 1 ? 2.5 : 1.2,
-          ),
-          itemCount: modules.length,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemBuilder: (context, index) {
-            return DashboardCard(
-              module: modules[index],
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Opening ${modules[index].displayName}...'),
-                    duration: const Duration(milliseconds: 1500),
-                    backgroundColor: modules[index].accentColor,
-                  ),
-                );
-              },
-            );
-          },
-        ),
-
-        const SizedBox(height: 32),
-
-        // System Events Section
-        Text(
-          'Recent System Events',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: 16),
-
-        // Events List
-        _buildEventsList(context),
+        _buildCommandBoard(context),
+        const SizedBox(height: 18),
+        _buildQuickStatsRow(context),
+        const SizedBox(height: 18),
+        _buildEventRail(context),
       ],
+    );
+  }
+
+  Widget _buildCommandBoard(BuildContext context) {
+    final isMobile = ResponsiveService.isMobile(context);
+    final isTablet = ResponsiveService.isTablet(context);
+    final width = MediaQuery.of(context).size.width;
+    final twoColumn = width > 1000;
+
+    final topModules = [
+      _ModuleTileSpec('BRAIN V 02', 'FLOW: FOUNDATION', 'FLOW: ALONE', Icons.psychology, const Color(0xFFFFA9A9), 'brain'),
+      _ModuleTileSpec('HEART V 02', 'FLOW: FOUNDATION', 'FLOW: BRAIN+MOUTH', Icons.favorite, const Color(0xFFFF5A5A), 'heart'),
+      _ModuleTileSpec('MOUTH V 02', 'FLOW: FOUNDATION', 'FLOW: BRAIN+HEART', Icons.record_voice_over, const Color(0xFFFF6FB3), 'mouth'),
+      _ModuleTileSpec('EYES V 02', 'FLOW: FOUNDATION', 'FLOW: BRAIN', Icons.remove_red_eye, const Color(0xFFF5F5F5), 'eyes'),
+    ];
+    final middleModules = [
+      _ModuleTileSpec('SSS V 02', 'FLOW: FOUNDATION', 'FLOW: ALONE', Icons.security, const Color(0xFFF8F8F8), 'sss'),
+      _ModuleTileSpec('IVR', 'FLOW: FOUNDATION', 'FLOW: SSS', Icons.call, const Color(0xFFF8F8F8), 'ivr'),
+      _ModuleTileSpec('LOGIN', 'FLOW: FOUNDATION', 'FLOW: SSS', Icons.login, const Color(0xFFF8F8F8), 'login'),
+      _ModuleTileSpec('monitoring', 'FLOW: FOUNDATION', 'FLOW: SSS', Icons.monitor_heart, const Color(0xFFF8F8F8), 'monitoring'),
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isMobile ? 14 : 18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: NeslaColors.cyan.withAlpha((0.22 * 255).toInt())),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            NeslaColors.darkBlue.withAlpha(210),
+            const Color(0xFF050B12).withAlpha(238),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(100),
+            blurRadius: 26,
+            offset: const Offset(0, 18),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _glassBadge('NESLA.COM', 'DESKTOP (4K)', '3840x2160'),
+              Text(
+                'DASHBOARD',
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                      color: NeslaColors.cyan,
+                      fontSize: isMobile ? 30 : 42,
+                      letterSpacing: 1.6,
+                    ),
+              ),
+              _glassBadge('ECOSYSTEM', 'LIVE', 'SYNC'),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Stack(
+            children: [
+              Positioned.fill(
+                child: Opacity(
+                  opacity: 0.14,
+                  child: ImageFiltered(
+                    imageFilter: ui.ImageFilter.blur(sigmaX: 1.0, sigmaY: 1.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          colors: [
+                            NeslaColors.cyan.withAlpha((0.15 * 255).toInt()),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Column(
+                children: [
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: topModules.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: isMobile ? 1 : (twoColumn ? 4 : 2),
+                      crossAxisSpacing: 14,
+                      mainAxisSpacing: 14,
+                      childAspectRatio: isTablet ? 1.65 : 2.2,
+                    ),
+                    itemBuilder: (context, index) => _moduleTile(topModules[index]),
+                  ),
+                  const SizedBox(height: 14),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: middleModules.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: isMobile ? 1 : (twoColumn ? 4 : 2),
+                      crossAxisSpacing: 14,
+                      mainAxisSpacing: 14,
+                      childAspectRatio: isTablet ? 1.65 : 2.2,
+                    ),
+                    itemBuilder: (context, index) => _moduleTile(middleModules[index]),
+                  ),
+                ],
+              ),
+              if (!isMobile)
+                Positioned(
+                  right: 0,
+                  top: 30,
+                  bottom: 30,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      _VerticalLaneLabel('ECOSYSTEM'),
+                      _VerticalLaneLabel('SECURITY'),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              _CenterFlowTag('MRM'),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            alignment: WrapAlignment.center,
+            children: const [
+              _KeyChip('DATE'),
+              _KeyChip('SSPG'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickStatsRow(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: _statCard('Brain', 'Foundation', 'ALONE', Icons.psychology, const Color(0xFFFFA9A9))),
+        const SizedBox(width: 12),
+        Expanded(child: _statCard('SSS', 'Foundation', 'SECURITY', Icons.security, const Color(0xFFF8F8F8))),
+        const SizedBox(width: 12),
+        Expanded(child: _statCard('Load Balancer', 'Routes', 'LIVE', Icons.hub, NeslaColors.cyan)),
+      ],
+    );
+  }
+
+  Widget _buildEventRail(BuildContext context) {
+    return _panel(
+      'Recent System Events',
+      _buildEventsList(context),
     );
   }
 
@@ -759,6 +878,154 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _glassBadge(String title, String subtitle, String footer) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withAlpha(70),
+        border: Border.all(color: NeslaColors.cyan.withAlpha((0.22 * 255).toInt())),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(color: NeslaColors.white, fontWeight: FontWeight.w700, fontSize: 12)),
+          Text(subtitle, style: const TextStyle(color: NeslaColors.darkGray, fontSize: 11)),
+          Text(footer, style: const TextStyle(color: NeslaColors.mediumGray, fontSize: 10)),
+        ],
+      ),
+    );
+  }
+
+  Widget _moduleTile(_ModuleTileSpec spec) {
+    return Container(
+      height: 150,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.black.withAlpha(90),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF1F4B8A), width: 1.6),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(70),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: Opacity(
+              opacity: 0.16,
+              child: Icon(spec.icon, size: 110, color: spec.accent),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  Icon(spec.icon, color: spec.accent, size: 30),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      spec.title,
+                      style: const TextStyle(
+                        color: NeslaColors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(spec.line1, style: const TextStyle(color: NeslaColors.mediumGray, fontSize: 12)),
+              const SizedBox(height: 3),
+              Text(spec.line2, style: const TextStyle(color: NeslaColors.mediumGray, fontSize: 12)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statCard(String title, String subtitle, String footnote, IconData icon, Color accent) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: NeslaColors.darkBlue.withAlpha(190),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withAlpha((0.22 * 255).toInt())),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: accent, size: 26),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(color: NeslaColors.white, fontWeight: FontWeight.w700)),
+                Text(subtitle, style: const TextStyle(color: NeslaColors.darkGray, fontSize: 11)),
+                Text(footnote, style: TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.w700)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _keyChip(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black.withAlpha(80),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withAlpha(90), width: 1.2),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: NeslaColors.white,
+          fontWeight: FontWeight.w800,
+          fontSize: 16,
+          letterSpacing: 2,
+        ),
+      ),
+    );
+  }
+
+  Widget _centerFlowTag(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.black.withAlpha(100),
+        border: Border.all(color: NeslaColors.cyan.withAlpha(120)),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(color: NeslaColors.cyan, fontSize: 26, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+
+  Widget _verticalLaneLabel(String label) {
+    return RotatedBox(
+      quarterTurns: 1,
+      child: Text(
+        label,
+        style: const TextStyle(color: NeslaColors.mediumGray, letterSpacing: 2, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+
   Widget _panel(String title, Widget child) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -812,6 +1079,24 @@ class _EventItem {
     required this.icon,
     required this.color,
   });
+}
+
+class _ModuleTileSpec {
+  final String title;
+  final String line1;
+  final String line2;
+  final IconData icon;
+  final Color accent;
+  final String route;
+
+  const _ModuleTileSpec(
+    this.title,
+    this.line1,
+    this.line2,
+    this.icon,
+    this.accent,
+    this.route,
+  );
 }
 
 // Neural Network Background Painter
