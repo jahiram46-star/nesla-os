@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.api.brain import router as brain_router
+from app.api.admin import router as admin_router
 from app.api.documents import router as documents_router
 from app.api.knowledge import router as knowledge_router
 from app.api.memory import router as memory_router
@@ -37,6 +38,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(memory_router)
+app.include_router(admin_router)
 app.include_router(knowledge_router)
 app.include_router(documents_router)
 app.include_router(brain_router)

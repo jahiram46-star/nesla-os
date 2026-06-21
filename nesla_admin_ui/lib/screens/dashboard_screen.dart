@@ -5,6 +5,7 @@ import '../models/module_info.dart';
 import '../widgets/sidebar.dart';
 import '../widgets/dashboard_card.dart';
 import '../widgets/browser_access_panel.dart';
+import '../services/admin_api.dart';
 import '../services/responsive_service.dart';
 import 'load_balancer_screen.dart';
 
@@ -16,16 +17,39 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final adminApi = AdminApi();
+  final openrouterApiKeyController = TextEditingController();
+  final openrouterBaseUrlController = TextEditingController();
+  final openrouterModelIdsController = TextEditingController();
+  final openrouterFallbackModelIdsController = TextEditingController();
+  final openrouterAppNameController = TextEditingController();
+  final openrouterRefererController = TextEditingController();
+  final openrouterTimeoutController = TextEditingController();
   late List<ModuleInfo> modules;
   late List<SidebarItem> sidebarItems;
   String selectedRoute = 'dashboard';
   bool sidebarCollapsed = false;
+  bool envLoading = true;
+  String? envStatus;
 
   @override
   void initState() {
     super.initState();
     modules = ModuleInfo.mockModules();
     _initializeSidebarItems();
+    _loadEnv();
+  }
+
+  @override
+  void dispose() {
+    openrouterApiKeyController.dispose();
+    openrouterBaseUrlController.dispose();
+    openrouterModelIdsController.dispose();
+    openrouterFallbackModelIdsController.dispose();
+    openrouterAppNameController.dispose();
+    openrouterRefererController.dispose();
+    openrouterTimeoutController.dispose();
+    super.dispose();
   }
 
   void _initializeSidebarItems() {
@@ -67,6 +91,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         route: 'load_balancer',
       ),
       SidebarItem(
+        label: 'LLM Env',
+        icon: Icons.settings,
+        route: 'env',
+      ),
+      SidebarItem(
         label: 'Heart',
         icon: Icons.favorite,
         route: 'heart',
@@ -82,6 +111,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
         route: 'eyes',
       ),
     ];
+  }
+
+  Future<void> _loadEnv() async {
+    setState(() {
+      envLoading = true;
+      envStatus = null;
+    });
+    try {
+      final env = await adminApi.fetchEnvConfig();
+      openrouterApiKeyController.text = env.openrouterApiKey;
+      openrouterBaseUrlController.text = env.openrouterBaseUrl;
+      openrouterModelIdsController.text = env.openrouterModelIds;
+      openrouterFallbackModelIdsController.text = env.openrouterFallbackModelIds;
+      openrouterAppNameController.text = env.openrouterAppName;
+      openrouterRefererController.text = env.openrouterReferer;
+      openrouterTimeoutController.text = env.openrouterTimeoutSeconds;
+    } catch (_) {
+      envStatus = 'Env load failed';
+    } finally {
+      setState(() => envLoading = false);
+    }
+  }
+
+  Future<void> _saveEnv() async {
+    setState(() => envStatus = null);
+    try {
+      await adminApi.saveEnvConfig(
+        AdminEnvConfig(
+          openrouterApiKey: openrouterApiKeyController.text.trim(),
+          openrouterBaseUrl: openrouterBaseUrlController.text.trim(),
+          openrouterModelIds: openrouterModelIdsController.text.trim(),
+          openrouterFallbackModelIds: openrouterFallbackModelIdsController.text.trim(),
+          openrouterAppName: openrouterAppNameController.text.trim(),
+          openrouterReferer: openrouterRefererController.text.trim(),
+          openrouterTimeoutSeconds: openrouterTimeoutController.text.trim(),
+        ),
+      );
+      setState(() => envStatus = 'Saved to .env');
+    } catch (_) {
+      setState(() => envStatus = 'Save failed');
+    }
   }
 
   @override
@@ -130,7 +200,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         child: selectedRoute == 'load_balancer'
                             ? const LoadBalancerScreen()
-                            : _buildDashboardContent(context),
+                            : selectedRoute == 'env'
+                                ? _buildEnvPanel(context)
+                                : _buildDashboardContent(context),
                       ),
                     ),
                   ],
@@ -362,6 +434,83 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         // Events List
         _buildEventsList(context),
+      ],
+    );
+  }
+
+  Widget _buildEnvPanel(BuildContext context) {
+    if (envLoading) {
+      return const Center(child: CircularProgressIndicator(color: NeslaColors.cyan));
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('LLM Env Manager', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 8),
+        const Text(
+          'OpenRouter model list ekhane update korle backend next request e latest list auto-read korbe.',
+          style: TextStyle(color: NeslaColors.darkGray),
+        ),
+        if (envStatus != null) ...[
+          const SizedBox(height: 8),
+          Text(envStatus!, style: const TextStyle(color: NeslaColors.cyan)),
+        ],
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: [
+            SizedBox(
+              width: 560,
+              child: _panel(
+                'OpenRouter Settings',
+                Column(
+                  children: [
+                    _field(openrouterApiKeyController, 'OPENROUTER_API_KEY'),
+                    _field(openrouterBaseUrlController, 'OPENROUTER_BASE_URL'),
+                    _field(openrouterModelIdsController, 'OPENROUTER_MODEL_IDS'),
+                    _field(openrouterFallbackModelIdsController, 'OPENROUTER_FALLBACK_MODEL_IDS'),
+                    _field(openrouterAppNameController, 'OPENROUTER_APP_NAME'),
+                    _field(openrouterRefererController, 'OPENROUTER_REFERER'),
+                    _field(openrouterTimeoutController, 'OPENROUTER_TIMEOUT_SECONDS', number: true),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _saveEnv,
+                        icon: const Icon(Icons.save),
+                        label: const Text('Save to .env'),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _loadEnv,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Reload from .env'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 560,
+              child: _panel(
+                'Model Examples',
+                const Text(
+                  'Suggested OpenRouter list:\n'
+                  'openai/gpt-4o-mini\n'
+                  'anthropic/claude-3.5-sonnet\n'
+                  'meta-llama/llama-3.1-70b-instruct\n'
+                  'mistralai/mistral-large',
+                  style: TextStyle(color: NeslaColors.darkGray),
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -606,6 +755,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
             label: 'More',
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _panel(String title, Widget child) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: NeslaColors.darkBlue.withAlpha((0.72 * 255).toInt()),
+        border: Border.all(color: NeslaColors.cyan.withAlpha((0.18 * 255).toInt())),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(color: NeslaColors.white, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _field(TextEditingController controller, String label, {bool number = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextField(
+        controller: controller,
+        keyboardType: number ? TextInputType.number : TextInputType.text,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: NeslaColors.darkGray),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: NeslaColors.cyan.withAlpha((0.18 * 255).toInt())),
+          ),
+          focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: NeslaColors.cyan)),
+        ),
       ),
     );
   }

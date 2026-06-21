@@ -4,6 +4,8 @@ from typing import Any
 
 import requests
 
+from app.core.env_manager import EnvManager
+
 
 @dataclass(frozen=True)
 class LlmGenerationResult:
@@ -14,13 +16,14 @@ class LlmGenerationResult:
 
 class OpenRouterFallbackClient:
     def __init__(self) -> None:
-        self.api_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
-        self.base_url = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").rstrip("/")
-        self.app_name = os.environ.get("OPENROUTER_APP_NAME", "NESLA OS")
-        self.referer = os.environ.get("OPENROUTER_REFERER", "http://localhost:8000")
-        self.timeout_seconds = int(os.environ.get("OPENROUTER_TIMEOUT_SECONDS", "60"))
-        self.models = self._load_models()
-        self.fallback_models = self._load_fallback_models()
+        env = EnvManager().read()
+        self.api_key = env.get("OPENROUTER_API_KEY", os.environ.get("OPENROUTER_API_KEY", "")).strip()
+        self.base_url = env.get("OPENROUTER_BASE_URL", os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")).rstrip("/")
+        self.app_name = env.get("OPENROUTER_APP_NAME", os.environ.get("OPENROUTER_APP_NAME", "NESLA OS"))
+        self.referer = env.get("OPENROUTER_REFERER", os.environ.get("OPENROUTER_REFERER", "http://localhost:8000"))
+        self.timeout_seconds = int(env.get("OPENROUTER_TIMEOUT_SECONDS", os.environ.get("OPENROUTER_TIMEOUT_SECONDS", "60")))
+        self.models = self._load_models(env)
+        self.fallback_models = self._load_fallback_models(env)
 
     def generate(self, prompt: str, system_prompt: str = "", context: dict[str, Any] | None = None) -> LlmGenerationResult:
         if not self.api_key:
@@ -94,11 +97,11 @@ class OpenRouterFallbackClient:
         return str(message.get("content", "")).strip()
 
     @staticmethod
-    def _load_models() -> list[str]:
-        raw = os.environ.get("OPENROUTER_MODEL_IDS", "")
+    def _load_models(env: dict[str, str]) -> list[str]:
+        raw = env.get("OPENROUTER_MODEL_IDS", os.environ.get("OPENROUTER_MODEL_IDS", ""))
         return [item.strip() for item in raw.split(",") if item.strip()]
 
     @staticmethod
-    def _load_fallback_models() -> list[str]:
-        raw = os.environ.get("OPENROUTER_FALLBACK_MODEL_IDS", "")
+    def _load_fallback_models(env: dict[str, str]) -> list[str]:
+        raw = env.get("OPENROUTER_FALLBACK_MODEL_IDS", os.environ.get("OPENROUTER_FALLBACK_MODEL_IDS", ""))
         return [item.strip() for item in raw.split(",") if item.strip()]
