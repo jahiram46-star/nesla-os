@@ -4,6 +4,7 @@ import subprocess
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from app.core.llm_client import OpenRouterFallbackClient
 from app.load_balancer.models import LoadBalancerServer, ModulePlacement
 from app.load_balancer.schemas import (
     LoadBalancerStatus,
@@ -152,6 +153,24 @@ class LoadBalancingRuleEngine:
                 )
             )
         return RoutingPlan(module_name=module_name, targets=targets)
+
+    def ai_routing_hint(self, module_name: str, servers: list[LoadBalancerServer], placements: list[ModulePlacement]) -> str | None:
+        prompt = (
+            "Suggest a safe NESLA routing preference for this module.\n"
+            f"Module: {module_name}\n"
+            f"Servers: {[server.name for server in servers]}\n"
+            f"Placements: {[f'{p.module_name}->{p.route_prefix}@{p.server_id}' for p in placements]}\n"
+            "Return a short preference list and a one-line reason."
+        )
+        try:
+            result = OpenRouterFallbackClient().generate(
+                prompt=prompt,
+                system_prompt="You are a routing assistant for NESLA OS. Keep answers short and operational.",
+                context={"module_name": module_name},
+            )
+            return result.content
+        except Exception:
+            return None
 
     def policy_for(self, module_name: str) -> ModuleServerPolicy | None:
         group = self._module_group(module_name)
@@ -322,9 +341,9 @@ class LoadBalancerService:
         )
 
         # LLM MODULE HOOK:
-        # Add your LLM API call here later if you want AI-assisted routing,
-        # capacity prediction, incident-aware placement, or automatic module migration.
-        # Keep the LLM result as a policy suggestion, then let the rule engine validate it.
+        # If OpenRouter is configured, ask one model for a routing hint and keep
+        # the deterministic rule engine as the final source of truth.
+        _ai_hint = self.rule_engine.ai_routing_hint(module_name, servers, placements)
 
         return self.rule_engine.ordered_targets(module_name, servers, placements)
 
@@ -386,9 +405,22 @@ class StatelessLlmPipelineService:
         placement_count = len(payload.local_context.get("placements", []))
 
         # LLM API HOOK:
-        # Add your provider call here later. Keep prompts/context stateless:
-        # read browser IndexedDB context from the request, call the model,
-        # return the result, and let the browser write it back to IndexedDB.
+        # Try OpenRouter models in order. If they all fail, fall back to the
+        # local deterministic response so the app keeps working.
+        try:
+            result = OpenRouterFallbackClient().generate(
+                prompt=payload.prompt,
+                system_prompt="You are NESLA OS's stateless assistant. Answer briefly and actionably.",
+                context=payload.local_context,
+            )
+            return LlmTaskResponse(
+                task_id=payload.task_id,
+                status="completed",
+                assistant_message=result.content,
+                next_action="store_result_in_indexeddb",
+            )
+        except Exception:
+            pass
 
         return LlmTaskResponse(
             task_id=payload.task_id,
