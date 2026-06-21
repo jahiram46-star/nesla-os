@@ -4,7 +4,9 @@ import '../theme/colors.dart';
 import '../models/module_info.dart';
 import '../widgets/sidebar.dart';
 import '../widgets/dashboard_card.dart';
+import '../widgets/browser_access_panel.dart';
 import '../services/responsive_service.dart';
+import 'load_balancer_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -60,6 +62,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         route: 'sss',
       ),
       SidebarItem(
+        label: 'Load Balancer',
+        icon: Icons.hub,
+        route: 'load_balancer',
+      ),
+      SidebarItem(
         label: 'Heart',
         icon: Icons.favorite,
         route: 'heart',
@@ -81,10 +88,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final isMobile = ResponsiveService.isMobile(context);
     final isTablet = ResponsiveService.isTablet(context);
-    final isWeb = ResponsiveService.isWeb(context);
-
     return Scaffold(
       backgroundColor: NeslaColors.deepBlue,
+      drawer: isMobile ? _buildMobileDrawer(context) : null,
       body: Stack(
         children: [
           // Futuristic Background
@@ -122,7 +128,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         padding: EdgeInsets.all(
                           ResponsiveService.getResponsivePadding(context),
                         ),
-                        child: _buildDashboardContent(context),
+                        child: selectedRoute == 'load_balancer'
+                            ? const LoadBalancerScreen()
+                            : _buildDashboardContent(context),
                       ),
                     ),
                   ],
@@ -195,23 +203,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Title
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'NESLA OS',
-                style: Theme.of(context).textTheme.displayMedium,
+          if (isMobile)
+            Builder(
+              builder: (context) => IconButton(
+                onPressed: () => Scaffold.of(context).openDrawer(),
+                icon: const Icon(Icons.menu, color: NeslaColors.cyan),
               ),
-              const SizedBox(height: 4),
-              const Text(
-                'AI Operating System Dashboard',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: NeslaColors.darkGray,
+            ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'NESLA OS',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                        fontSize: isMobile ? 24 : null,
+                      ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                const Text(
+                  'AI Operating System Dashboard',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: NeslaColors.darkGray,
+                  ),
+                ),
+              ],
+            ),
           ),
 
           // Right Section
@@ -248,6 +270,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
               const SizedBox(width: 16),
+              Tooltip(
+                message: 'Open NESLA Browser Access',
+                child: IconButton(
+                  onPressed: _showBrowserAccess,
+                  icon: const Icon(Icons.travel_explore, color: NeslaColors.cyan),
+                ),
+              ),
+              const SizedBox(width: 8),
               IconButton(
                 onPressed: () {},
                 icon: const Icon(Icons.notifications, color: NeslaColors.cyan),
@@ -285,6 +315,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _buildGeminiStyleHero(),
+        const SizedBox(height: 24),
         // System Status Section
         Text(
           'Module Status',
@@ -331,6 +363,109 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // Events List
         _buildEventsList(context),
       ],
+    );
+  }
+
+  Widget _buildMobileDrawer(BuildContext context) {
+    return Drawer(
+      backgroundColor: NeslaColors.darkBlue,
+      child: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(12),
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                'NESLA OS',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: NeslaColors.white),
+              ),
+            ),
+            const Divider(color: NeslaColors.mediumBlue),
+            ...sidebarItems.map(
+              (item) => ListTile(
+                leading: Icon(item.icon, color: item.isActive ? NeslaColors.cyan : NeslaColors.darkGray),
+                title: Text(item.label, style: TextStyle(color: item.isActive ? NeslaColors.cyan : NeslaColors.mediumGray)),
+                selected: item.isActive,
+                onTap: () {
+                  setState(() {
+                    selectedRoute = item.route;
+                    for (final sidebarItem in sidebarItems) {
+                      sidebarItem.isActive = sidebarItem.route == item.route;
+                    }
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showBrowserAccess() {
+    showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: NeslaColors.darkBlue,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: const Padding(
+          padding: EdgeInsets.all(20),
+          child: BrowserAccessPanel(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGeminiStyleHero() {
+    final isMobile = ResponsiveService.isMobile(context);
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isMobile ? 18 : 24),
+      decoration: BoxDecoration(
+        color: NeslaColors.darkBlue.withAlpha(190),
+        border: Border.all(color: NeslaColors.cyan.withAlpha(45)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ShaderMask(
+            shaderCallback: (bounds) => NeslaColors.cyanGradient.createShader(bounds),
+            child: const Text(
+              'Hello, Admin',
+              style: TextStyle(fontSize: 34, fontWeight: FontWeight.w800, color: Colors.white),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Ask NESLA to inspect servers, open approved consoles, or prepare a deployment path.',
+            style: TextStyle(color: NeslaColors.darkGray, fontSize: 15),
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: NeslaColors.deepBlue,
+              border: Border.all(color: NeslaColors.cyan.withAlpha(35)),
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.auto_awesome, color: NeslaColors.cyan),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    isMobile ? 'Tap a module or ask NESLA...' : 'Tell NESLA what to do next...',
+                    style: const TextStyle(color: NeslaColors.mediumGray),
+                  ),
+                ),
+                const Icon(Icons.mic_none, color: NeslaColors.darkGray),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

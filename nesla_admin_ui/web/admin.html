@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NESLA OS Admin</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07111f;
+      --panel: #0b1b2e;
+      --line: rgba(53, 217, 246, .22);
+      --text: #f7fbff;
+      --muted: #8ea3b8;
+      --cyan: #35d9f6;
+      --green: #22c55e;
+      --orange: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      background:
+        radial-gradient(circle at 28% 8%, rgba(53,217,246,.16), transparent 30%),
+        radial-gradient(circle at 70% 0%, rgba(96,165,250,.12), transparent 28%),
+        var(--bg);
+      color: var(--text);
+    }
+    .layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+    aside { background: rgba(11,27,46,.92); border-right: 1px solid var(--line); padding: 22px; }
+    .logo { width: 60px; height: 60px; display: grid; place-items: center; border-radius: 10px; background: linear-gradient(135deg, var(--cyan), #60a5fa); color: var(--bg); font-size: 30px; font-weight: 800; }
+    nav { margin-top: 28px; display: grid; gap: 8px; }
+    nav button { border: 1px solid transparent; background: transparent; color: var(--muted); text-align: left; padding: 12px; border-radius: 8px; cursor: pointer; }
+    nav button.active { color: var(--cyan); border-color: var(--line); background: rgba(53,217,246,.12); }
+    main { padding: 28px; }
+    header { display: flex; justify-content: space-between; gap: 16px; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 18px; }
+    h1, h2 { margin: 0; }
+    .muted { color: var(--muted); }
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .icon-btn { width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 50%; background: rgba(11,27,46,.78); color: var(--cyan); cursor: pointer; font-size: 20px; }
+    .status { border: 1px solid rgba(34,197,94,.45); color: var(--green); padding: 8px 12px; border-radius: 999px; background: rgba(34,197,94,.08); }
+    .hero { margin-top: 22px; padding: 26px; border: 1px solid var(--line); border-radius: 20px; background: rgba(11,27,46,.72); }
+    .hero h2 { font-size: clamp(34px, 5vw, 58px); line-height: 1; background: linear-gradient(90deg, var(--cyan), #60a5fa, #a78bfa); -webkit-background-clip: text; color: transparent; }
+    .prompt { margin-top: 22px; display: flex; align-items: center; gap: 12px; padding: 16px 18px; border: 1px solid rgba(255,255,255,.08); border-radius: 999px; background: rgba(7,17,31,.75); color: var(--muted); }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 22px; }
+    .card, .panel { background: rgba(11,27,46,.78); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+    .card strong { display: block; font-size: 18px; margin-bottom: 12px; }
+    .bar { height: 6px; background: #12365a; border-radius: 999px; overflow: hidden; margin-top: 8px; }
+    .bar span { display: block; height: 100%; background: var(--cyan); }
+    .forms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 22px; }
+    label { display: grid; gap: 6px; margin-bottom: 10px; color: var(--muted); font-size: 13px; }
+    input, select { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 11px; background: #071827; color: var(--text); }
+    .primary { width: 100%; border: 0; border-radius: 8px; padding: 12px; background: var(--cyan); color: var(--bg); font-weight: 800; cursor: pointer; }
+    .list { display: grid; gap: 10px; margin-top: 14px; }
+    .row { display: flex; justify-content: space-between; gap: 14px; padding: 12px; border: 1px solid rgba(255,255,255,.08); border-radius: 8px; background: rgba(7,17,31,.5); }
+    dialog { border: 1px solid var(--line); border-radius: 16px; background: #071827; color: var(--text); max-width: 760px; width: calc(100% - 32px); }
+    .browser-shell { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #06111d; }
+    .browser-bar { display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,.04); border-bottom: 1px solid var(--line); }
+    .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--orange); }
+    .address { flex: 1; border-radius: 999px; padding: 10px 14px; background: #0b1b2e; color: var(--muted); }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } aside { display: none; } .grid, .forms { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="logo">N</div>
+      <h2 style="margin-top:16px">NESLA OS</h2>
+      <p class="muted">Admin Dashboard</p>
+      <nav>
+        <button class="active">Dashboard</button>
+        <button>Load Balancer</button>
+        <button>Brain</button>
+        <button>SSS Monitor</button>
+      </nav>
+    </aside>
+    <main>
+      <header>
+        <div>
+          <h1>NESLA OS</h1>
+          <div class="muted">AI Operating System Dashboard</div>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn" title="NESLA Browser Access" onclick="openBrowserAccess()">🌐</button>
+          <div class="status" id="apiStatus">Checking backend...</div>
+        </div>
+      </header>
+
+      <section class="hero">
+        <h2>Hello, Admin</h2>
+        <p class="muted">Ask NESLA to inspect servers, open approved consoles, or prepare a deployment path.</p>
+        <div class="prompt">✨ Tell NESLA what to do next... <span style="margin-left:auto">🎙</span></div>
+      </section>
+
+      <section class="grid">
+        <div class="card"><strong>Brain</strong><span class="muted">CPU 42%</span><div class="bar"><span style="width:42%"></span></div></div>
+        <div class="card"><strong>Memory</strong><span class="muted">CPU 24%</span><div class="bar"><span style="width:24%"></span></div></div>
+        <div class="card"><strong>Load Balancer</strong><span class="muted">CPU 18%</span><div class="bar"><span style="width:18%"></span></div></div>
+      </section>
+
+      <section class="forms">
+        <div class="panel">
+          <h2>Add Server</h2>
+          <label>Name <input id="serverName" value="server-1"></label>
+          <label>Host/IP <input id="serverHost" value="127.0.0.1"></label>
+          <label>Port <input id="serverPort" type="number" value="8001"></label>
+          <label>Capabilities <input id="serverCaps" value="brain,memory,sss"></label>
+          <button class="primary" onclick="addServer()">Add Server</button>
+        </div>
+        <div class="panel">
+          <h2>Assign Module</h2>
+          <label>Server <select id="serverSelect"></select></label>
+          <label>Module <input id="moduleName" value="brain"></label>
+          <label>Route Prefix <input id="routePrefix" value="/brain"></label>
+          <button class="primary" onclick="assignModule()">Assign Module</button>
+        </div>
+      </section>
+
+      <section class="forms">
+        <div class="panel">
+          <h2>Firebase / Free Server Presets</h2>
+          <p class="muted">Adds 10 Firebase serverless region presets. Replace project id with your real Firebase project.</p>
+          <label>Firebase Project ID <input id="firebaseProject" value="your-project-id"></label>
+          <button class="primary" onclick="addFirebasePresets()">Add 10 Firebase Presets</button>
+        </div>
+        <div class="panel">
+          <h2>GitHub Auto Commit</h2>
+          <p class="muted" id="gitStatus">Git status loading...</p>
+          <label>Commit Message <input id="commitMessage" value="auto: nesla os update"></label>
+          <label><input id="pushRemote" type="checkbox" style="width:auto"> Push to GitHub remote after commit</label>
+          <button class="primary" onclick="autoCommit()">Auto Commit Local Repo</button>
+          <pre class="muted" id="gitOutput" style="white-space:pre-wrap"></pre>
+        </div>
+      </section>
+
+      <section class="panel" style="margin-top:16px">
+        <h2>LLM Task Chat - Browser IndexedDB Pipeline</h2>
+        <p class="muted">Messages and pipeline context stay in this browser IndexedDB. Backend receives only the current pipeline request.</p>
+        <div class="list" id="chatMessages" style="min-height:160px"></div>
+        <div id="confirmationBox"></div>
+        <div class="row" style="margin-top:12px">
+          <input id="chatInput" placeholder="Give LLM a task">
+          <button class="primary" style="width:160px" onclick="sendTask()">Send</button>
+        </div>
+      </section>
+
+      <section class="forms">
+        <div class="panel"><h2>Servers</h2><div class="list" id="servers"></div></div>
+        <div class="panel"><h2>Module Placements</h2><div class="list" id="placements"></div></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="browserDialog">
+    <div class="browser-shell">
+      <div class="browser-bar">
+        <span class="dot"></span><span class="dot" style="background:#22c55e"></span><span class="dot" style="background:#60a5fa"></span>
+        <div class="address" id="browserAddress">nesla://browser-access</div>
+        <button class="icon-btn" onclick="browserDialog.close()">×</button>
+      </div>
+      <div style="padding:18px">
+        <h2>NESLA Browser Access</h2>
+        <p class="muted">Chrome-style console access. Add your Chrome API bridge and console URLs in backend access_browser hook.</p>
+        <div class="list" id="browserTargets"></div>
+        <pre class="muted" id="browserOutput" style="white-space:pre-wrap"></pre>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    const API = 'http://127.0.0.1:8000';
+    let cachedServers = [];
+    let cachedPlacements = [];
+    let pipelineDb;
+    let pendingAgentConfirmation = null;
+
+    function openPipelineDb() {
+      return new Promise((resolve, reject) => {
+        if (pipelineDb) return resolve(pipelineDb);
+        const req = indexedDB.open('nesla_llm_pipeline_html', 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains('messages')) db.createObjectStore('messages', {keyPath: 'id'});
+          if (!db.objectStoreNames.contains('context')) db.createObjectStore('context', {keyPath: 'key'});
+        };
+        req.onsuccess = () => { pipelineDb = req.result; resolve(pipelineDb); };
+        req.onerror = () => reject(req.error);
+      });
+    }
+    async function idbPut(storeName, value) {
+      const db = await openPipelineDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readwrite');
+        tx.objectStore(storeName).put(value);
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+    async function idbAll(storeName) {
+      const db = await openPipelineDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readonly');
+        const req = tx.objectStore(storeName).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    async function json(url, options) {
+      const res = await fetch(url, options);
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    }
+    async function refresh() {
+      try {
+        const status = await json(`${API}/load-balancer/status`);
+        document.getElementById('apiStatus').textContent = `${status.status} | ${status.server_count} servers`;
+        const servers = await json(`${API}/load-balancer/servers`);
+        const placements = await json(`${API}/load-balancer/placements`);
+        cachedServers = servers;
+        cachedPlacements = placements;
+        document.getElementById('serverSelect').innerHTML = servers.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        document.getElementById('servers').innerHTML = servers.length ? servers.map(s => `<div class="row"><span>${s.name}<br><small class="muted">${s.protocol}://${s.host}:${s.port}</small></span><span>${s.status}</span></div>`).join('') : '<span class="muted">No server added yet.</span>';
+        document.getElementById('placements').innerHTML = placements.length ? placements.map(p => `<div class="row"><span>${p.module_name}<br><small class="muted">${p.route_prefix}</small></span><span>${p.server ? p.server.name : 'unknown'}</span></div>`).join('') : '<span class="muted">No placement yet.</span>';
+      } catch (err) {
+        document.getElementById('apiStatus').textContent = 'Backend offline';
+      }
+      refreshGit();
+      renderChat();
+    }
+    async function openBrowserAccess() {
+      browserDialog.showModal();
+      try {
+        const manifest = await json(`${API}/llm/browser/manifest`);
+        browserTargets.innerHTML = manifest.approved_console_targets.map(t => `<div class="row"><span><b>${t.label}</b><br><small class="muted">${t.url}</small><br><small>${t.purpose}</small></span><button class="primary" style="width:130px" onclick="requestBrowserOpen('${t.key}', '${t.url}')">Open</button></div>`).join('');
+        browserOutput.textContent = `Rules: ${manifest.rules.length}\nTools: ${manifest.tool_capabilities.join(', ')}\n\n${manifest.chrome_api_hook}`;
+      } catch (err) {
+        browserOutput.textContent = err.message;
+      }
+    }
+    async function requestBrowserOpen(key, url) {
+      browserAddress.textContent = url;
+      const result = await json(`${API}/llm/browser/open/${key}`, {method: 'POST'});
+      browserOutput.textContent = JSON.stringify(result, null, 2);
+    }
+    async function addServer() {
+      await json(`${API}/load-balancer/servers`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          name: serverName.value,
+          host: serverHost.value,
+          port: Number(serverPort.value),
+          capabilities: serverCaps.value.split(',').map(x => x.trim()).filter(Boolean)
+        })
+      });
+      refresh();
+    }
+    async function assignModule() {
+      await json(`${API}/load-balancer/placements`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          module_name: moduleName.value,
+          server_id: Number(serverSelect.value),
+          route_prefix: routePrefix.value
+        })
+      });
+      refresh();
+    }
+    async function addFirebasePresets() {
+      const project = document.getElementById('firebaseProject').value || 'your-project-id';
+      const presets = await json(`${API}/load-balancer/presets/firebase?project_id=${encodeURIComponent(project)}`);
+      await json(`${API}/load-balancer/servers/bulk`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({servers: presets.map(p => ({
+          name: p.name,
+          host: p.host,
+          port: p.port,
+          protocol: p.protocol,
+          weight: 1,
+          max_modules: 20,
+          capabilities: p.capabilities,
+          notes: p.notes
+        }))})
+      });
+      refresh();
+    }
+    async function refreshGit() {
+      try {
+        const status = await json(`${API}/load-balancer/git/status`);
+        gitStatus.textContent = `${status.branch} | ${status.clean ? 'clean' : status.changes.length + ' changes'}`;
+      } catch {
+        gitStatus.textContent = 'Git status unavailable';
+      }
+    }
+    async function autoCommit() {
+      gitOutput.textContent = 'Committing...';
+      try {
+        const res = await json(`${API}/load-balancer/git/commit`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({message: commitMessage.value, include_all: true, push: pushRemote.checked})
+        });
+        gitOutput.textContent = res.output || res.message;
+      } catch (err) {
+        gitOutput.textContent = err.message;
+      }
+      refreshGit();
+    }
+    async function renderChat() {
+      const messages = (await idbAll('messages')).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+      chatMessages.innerHTML = messages.length ? messages.map(m => `<div class="row"><span><b>${m.role}</b><br>${m.text}</span></div>`).join('') : '<span class="muted">No IndexedDB messages yet.</span>';
+      confirmationBox.innerHTML = pendingAgentConfirmation
+        ? `<div class="row" style="border-color:rgba(245,158,11,.6); margin-top:10px"><span><b>Admin confirmation required</b><br><small>${pendingAgentConfirmation.actions.map(a => a.title).join('<br>')}</small></span><span><button class="primary" onclick="confirmAgent(true)">Approve</button><button class="primary" style="margin-top:6px;background:#12365a;color:#f7fbff" onclick="confirmAgent(false)">Cancel</button></span></div>`
+        : '';
+    }
+    async function sendTask() {
+      const text = chatInput.value.trim();
+      if (!text) return;
+      chatInput.value = '';
+      await idbPut('messages', {id: `user-${Date.now()}`, role: 'user', text, createdAt: new Date().toISOString()});
+      await idbPut('context', {key: 'servers', value: cachedServers});
+      await idbPut('context', {key: 'placements', value: cachedPlacements});
+      await idbPut('messages', {id: `assistant-working-${Date.now()}`, role: 'assistant', text: 'I am working...', createdAt: new Date().toISOString()});
+      await renderChat();
+      const contextRows = await idbAll('context');
+      const context = Object.fromEntries(contextRows.map(row => [row.key, row.value]));
+      const res = await json(`${API}/llm/browser/agent/tasks`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({task_id: `task-${Date.now()}`, prompt: text, local_context: context, auto_execute_safe_actions: true})
+      });
+      const actions = (res.actions || []).map(a => `- ${a.title} (${a.risk})`).join('\n');
+      const textOut = `${res.assistant_message}${actions ? '\n\nActions:\n' + actions : ''}`;
+      pendingAgentConfirmation = res.confirmation_token ? {token: res.confirmation_token, actions: res.actions || []} : null;
+      await idbPut('messages', {id: `assistant-${Date.now()}`, role: 'assistant', text: textOut, createdAt: new Date().toISOString()});
+      await idbPut('context', {key: 'lastResult', value: textOut});
+      renderChat();
+    }
+    async function confirmAgent(approved) {
+      if (!pendingAgentConfirmation) return;
+      const res = await json(`${API}/llm/browser/agent/confirm`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({confirmation_token: pendingAgentConfirmation.token, approved})
+      });
+      pendingAgentConfirmation = null;
+      await idbPut('messages', {id: `assistant-confirm-${Date.now()}`, role: 'assistant', text: res.assistant_message, createdAt: new Date().toISOString()});
+      renderChat();
+    }
+    refresh();
+  </script>
+</body>
+</html>

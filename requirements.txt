@@ -4,3 +4,4 @@ sqlalchemy>=2.0
 pytest
 requests
 python-multipart
+playwright
